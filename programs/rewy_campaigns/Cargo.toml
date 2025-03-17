@@ -1,0 +1,22 @@
+[package]
+name = "rewy_campaigns"
+version = "0.1.0"
+description = "Created with Anchor"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "rewy_campaigns"
+
+
+[dependencies]
+anchor-lang = { version = "0.31.0", features = ["init-if-needed"] }
+anchor-spl = "0.31.0"
+solana-program = "2.2.1"  # Matches latest Solana CLI
+spl-token-2022 = "6.0.0"
+spl-associated-token-account = "6.0.0"
+sha2 = "0.10"  # Optional, for proper hashing
+
+[features]
+default = []
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
