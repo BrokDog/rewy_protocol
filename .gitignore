@@ -5,3 +5,10 @@ target
 node_modules
 test-ledger
 .yarn
+keybackup.json
+rewy_campaigns.json
+rewy_protocol.json
+rewy-metadata.json
+rewy-mint-keypair-airdrop-sample.json
+rewy-mint-keypair-with-meta.json
+rewy-mint-keypair.json

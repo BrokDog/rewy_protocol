@@ -5,7 +5,10 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-rewy_campaigns = "4Xcb5BHHXMyQE9YB1Zw6ofquBuHJod7VEb9sqpRqpA8q"
+rewy_protocol = "BxvZ8gSjCMgKeZ6LLsWX9fGp7A39zLBQ7vcFx91NeNBD"
+
+[programs.devnet]
+rewy_protocol = "BxvZ8gSjCMgKeZ6LLsWX9fGp7A39zLBQ7vcFx91NeNBD"
 
 [registry]
 url = "https://api.apr.dev"

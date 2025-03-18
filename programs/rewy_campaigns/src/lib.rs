@@ -3,7 +3,8 @@ use anchor_spl::token::{self, Mint, Token, TokenAccount};
 use anchor_lang::solana_program::instruction::Instruction;
 use sha2::{Digest, Sha256};
 
-declare_id!("UEAwTQtzZKJWebJ7sWFVEsiTosLpEgjwe9xQA9h1KWZ");
+declare_id!("BxvZ8gSjCMgKeZ6LLsWX9fGp7A39zLBQ7vcFx91NeNBD");
+
 
 // [Enums and Structs unchanged]
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq)]
@@ -11,6 +12,12 @@ pub enum CampaignType {
     StakeForAction,
     StakeForCrowdsource,
     StakeForDistribution,
+}
+
+#[account]
+pub struct RewyAIConfig {
+    pub admin: Pubkey,        // REWY AI admin key (you control this)
+    pub verifier_key: Pubkey, // Dynamic REWY AI verifier key
 }
 
 #[account]
@@ -37,7 +44,7 @@ pub struct Campaign {
     pub rewy_reward_per_action: u64,
     pub airdrop_reward_per_action: Option<u64>,
     pub max_claims: Option<u64>,
-    pub verifier_key: Option<Pubkey>,
+    pub business_verifier_key: Option<Pubkey>, // Business-specific key
 }
 
 #[account]
@@ -154,6 +161,35 @@ pub struct InitializeCampaign<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
+
+#[derive(Accounts)]
+pub struct InitializeConfig<'info> {
+    #[account(
+        init,
+        payer = admin,
+        space = 8 + 32 + 32,
+        seeds = [b"rewy_ai_config"],
+        bump
+    )]
+    pub config: Account<'info, RewyAIConfig>,
+    #[account(mut)]
+    pub admin: Signer<'info>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct UpdateVerifierKey<'info> {
+    #[account(
+        mut,
+        has_one = admin,
+        seeds = [b"rewy_ai_config"],
+        bump
+    )]
+    pub config: Account<'info, RewyAIConfig>,
+    pub admin: Signer<'info>,
+}
+
+
 #[derive(Accounts)]
 pub struct RedeemVoucher<'info> {
     #[account(mut, has_one = rewy_stake_account, constraint = campaign.campaign_type == CampaignType::StakeForAction)]
@@ -167,9 +203,11 @@ pub struct RedeemVoucher<'info> {
     pub user_wallet: AccountInfo<'info>,
     pub token_program: Program<'info, Token>,
     pub clock: Sysvar<'info, Clock>,
-    /// CHECK: This is the instructions sysvar for Ed25519 verification, constrained to the correct address
+    /// CHECK: This is the instructions sysvar for Ed25519 verification
     #[account(address = anchor_lang::solana_program::sysvar::instructions::ID)]
     pub instructions: UncheckedAccount<'info>,
+    #[account(seeds = [b"rewy_ai_config"], bump)]
+    pub config: Account<'info, RewyAIConfig>,
 }
 
 #[derive(Accounts)]
@@ -236,12 +274,13 @@ pub struct SubmitProof<'info> {
     /// CHECK: This is the user's wallet receiving tokens, verified by Ed25519 signature
     #[account(mut)]
     pub user_wallet: AccountInfo<'info>,
-    pub authority: Signer<'info>,
     pub token_program: Program<'info, Token>,
     pub clock: Sysvar<'info, Clock>,
-    /// CHECK: This is the instructions sysvar for Ed25519 verification, constrained to the correct address
+    /// CHECK: This is the instructions sysvar for Ed25519 verification
     #[account(address = anchor_lang::solana_program::sysvar::instructions::ID)]
     pub instructions: UncheckedAccount<'info>,
+    #[account(seeds = [b"rewy_ai_config"], bump)]
+    pub config: Account<'info, RewyAIConfig>,
 }
 
 #[derive(Accounts)]
@@ -271,6 +310,19 @@ pub struct AirdropParams {
 pub mod rewy_protocol {
     use super::*;
 
+    pub fn initialize_config(ctx: Context<InitializeConfig>, verifier_key: Pubkey) -> Result<()> {
+        let config = &mut ctx.accounts.config;
+        config.admin = ctx.accounts.admin.key();
+        config.verifier_key = verifier_key;
+        Ok(())
+    }
+
+    pub fn update_verifier_key(ctx: Context<UpdateVerifierKey>, new_key: Pubkey) -> Result<()> {
+        let config = &mut ctx.accounts.config;
+        config.verifier_key = new_key;
+        Ok(())
+    }
+
     pub fn initialize_campaign(
         ctx: Context<InitializeCampaign>,
         campaign_type: CampaignType,
@@ -280,8 +332,8 @@ pub mod rewy_protocol {
         max_claims: u64,
         metadata: String,
         content_hash: [u8; 32],
-        verifier_key: Option<Pubkey>,
-        airdrop_params: Option<AirdropParams>, // Updated type
+        business_verifier_key: Option<Pubkey>,
+        airdrop_params: Option<AirdropParams>,
     ) -> Result<()> {
         let campaign = &mut ctx.accounts.campaign;
         campaign.authority = ctx.accounts.authority.key();
@@ -297,15 +349,15 @@ pub mod rewy_protocol {
         campaign.max_claims = Some(max_claims);
         campaign.nonce = 0;
         campaign.rewy_reward_per_action = rewy_reward_per_action;
-        campaign.verifier_key = verifier_key;
-    
+        campaign.business_verifier_key = business_verifier_key;
+
         if let Some(params) = airdrop_params {
             campaign.airdrop_mint = Some(params.mint);
             campaign.airdrop_stake_account = Some(ctx.accounts.airdrop_stake_account.as_ref().unwrap().key());
             campaign.airdrop_staked_amount = Some(params.stake);
             campaign.airdrop_reward_per_action = Some(params.reward);
         }
-    
+
         token::transfer(
             CpiContext::new(
                 ctx.accounts.token_program.to_account_info(),
@@ -317,7 +369,7 @@ pub mod rewy_protocol {
             ),
             rewy_stake,
         )?;
-    
+
         Ok(())
     }
 
@@ -462,22 +514,35 @@ pub mod rewy_protocol {
             campaign.airdrop_reward_per_action.unwrap_or(0),
         );
         let message = anchor_lang::solana_program::hash::hash(&challenge).to_bytes();
-        let verifier_key = campaign.verifier_key.ok_or(ErrorCode::VerifierKeyMissing)?;
-        let ed25519_ix = Instruction {
-            program_id: anchor_lang::solana_program::ed25519_program::ID,
-            accounts: vec![],
-            data: [
-                vec![0u8],
-                verifier_key.to_bytes().to_vec(),
-                proof_code,
-                message.to_vec(),
-            ].concat(),
-        };
 
-        anchor_lang::solana_program::program::invoke(
-            &ed25519_ix,
-            &[ctx.accounts.user_wallet.clone(), ctx.accounts.instructions.to_account_info()],
-        )?;
+        // Check REWY AI key (global) and business key (campaign-specific)
+        let rewy_ai_key = ctx.accounts.config.verifier_key;
+        let verifier_keys = [
+            Some(rewy_ai_key),
+            campaign.business_verifier_key,
+        ];
+        let mut signature_valid = false;
+        for verifier_key in verifier_keys.iter().flatten() {
+            let ed25519_ix = Instruction {
+                program_id: anchor_lang::solana_program::ed25519_program::ID,
+                accounts: vec![],
+                data: [
+                    vec![0u8],
+                    verifier_key.to_bytes().to_vec(),
+                    proof_code.clone(),
+                    message.to_vec(),
+                ].concat(),
+            };
+            let result = anchor_lang::solana_program::program::invoke(
+                &ed25519_ix,
+                &[ctx.accounts.user_wallet.clone(), ctx.accounts.instructions.to_account_info()],
+            );
+            if result.is_ok() {
+                signature_valid = true;
+                break;
+            }
+        }
+        require!(signature_valid, ErrorCode::InvalidProof);
 
         campaign.rewy_staked_amount -= campaign.rewy_reward_per_action;
         let mut airdrop_amount = None;
@@ -489,11 +554,7 @@ pub mod rewy_protocol {
         }
         campaign.nonce += 1;
 
-        let seeds = [
-            b"campaign" as &[u8],
-            campaign.authority.as_ref(),
-            campaign.metadata.as_bytes(),
-        ];
+        let seeds = [b"campaign", campaign.authority.as_ref(), campaign.metadata.as_bytes()];
         let signer_seeds = &[&seeds[..]];
 
         token::transfer(CpiContext::new_with_signer(
@@ -547,7 +608,6 @@ pub mod rewy_protocol {
         if let Some(max) = campaign.max_claims {
             require!(campaign.nonce < max, ErrorCode::MaxClaimsReached);
         }
-        let verifier_key = campaign.verifier_key.ok_or(ErrorCode::VerifierKeyMissing)?;
 
         let challenge = hash(
             campaign.pda,
@@ -557,21 +617,34 @@ pub mod rewy_protocol {
             airdrop_amount.unwrap_or(0),
         );
         let message = anchor_lang::solana_program::hash::hash(&challenge).to_bytes();
-        let ed25519_ix = Instruction {
-            program_id: anchor_lang::solana_program::ed25519_program::ID,
-            accounts: vec![],
-            data: [
-                vec![0u8],
-                verifier_key.to_bytes().to_vec(),
-                voucher,
-                message.to_vec(),
-            ].concat(),
-        };
 
-        anchor_lang::solana_program::program::invoke(
-            &ed25519_ix,
-            &[ctx.accounts.user_wallet.clone(), ctx.accounts.instructions.to_account_info()],
-        )?;
+        let rewy_ai_key = ctx.accounts.config.verifier_key;
+        let verifier_keys = [
+            Some(rewy_ai_key),
+            campaign.business_verifier_key,
+        ];
+        let mut signature_valid = false;
+        for verifier_key in verifier_keys.iter().flatten() {
+            let ed25519_ix = Instruction {
+                program_id: anchor_lang::solana_program::ed25519_program::ID,
+                accounts: vec![],
+                data: [
+                    vec![0u8],
+                    verifier_key.to_bytes().to_vec(),
+                    voucher.clone(),
+                    message.to_vec(),
+                ].concat(),
+            };
+            let result = anchor_lang::solana_program::program::invoke(
+                &ed25519_ix,
+                &[ctx.accounts.user_wallet.clone(), ctx.accounts.instructions.to_account_info()],
+            );
+            if result.is_ok() {
+                signature_valid = true;
+                break;
+            }
+        }
+        require!(signature_valid, ErrorCode::InvalidProof);
 
         campaign.rewy_staked_amount -= rewy_amount;
         if let Some(amount) = airdrop_amount {
@@ -579,11 +652,7 @@ pub mod rewy_protocol {
         }
         campaign.nonce += 1;
 
-        let seeds = [
-            b"campaign" as &[u8],
-            campaign.authority.as_ref(),
-            campaign.metadata.as_bytes(),
-        ];
+        let seeds = [b"campaign", campaign.authority.as_ref(), campaign.metadata.as_bytes()];
         let signer_seeds = &[&seeds[..]];
 
         token::transfer(CpiContext::new_with_signer(

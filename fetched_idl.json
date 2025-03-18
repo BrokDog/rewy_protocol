@@ -1,0 +1,1337 @@
+{
+  "accounts": [
+    {
+      "discriminator": [
+        50,
+        40,
+        49,
+        11,
+        157,
+        220,
+        229,
+        192
+      ],
+      "name": "Campaign"
+    },
+    {
+      "discriminator": [
+        176,
+        85,
+        17,
+        11,
+        13,
+        194,
+        18,
+        1
+      ],
+      "name": "Distribution"
+    },
+    {
+      "discriminator": [
+        73,
+        7,
+        67,
+        59,
+        57,
+        97,
+        183,
+        88
+      ],
+      "name": "RewyAIConfig"
+    }
+  ],
+  "address": "BxvZ8gSjCMgKeZ6LLsWX9fGp7A39zLBQ7vcFx91NeNBD",
+  "errors": [
+    {
+      "code": 6000,
+      "msg": "Campaign is paused",
+      "name": "CampaignPaused"
+    },
+    {
+      "code": 6001,
+      "msg": "Insufficient stake for operation",
+      "name": "InsufficientStake"
+    },
+    {
+      "code": 6002,
+      "msg": "Insufficient stake for reward update",
+      "name": "InsufficientStakeForUpdate"
+    },
+    {
+      "code": 6003,
+      "msg": "Campaign has expired",
+      "name": "CampaignExpired"
+    },
+    {
+      "code": 6004,
+      "msg": "Invalid proof signature",
+      "name": "InvalidProof"
+    },
+    {
+      "code": 6005,
+      "msg": "Invalid campaign type",
+      "name": "InvalidType"
+    },
+    {
+      "code": 6006,
+      "msg": "Max claims reached",
+      "name": "MaxClaimsReached"
+    },
+    {
+      "code": 6007,
+      "msg": "Distribution already redeemed",
+      "name": "AlreadyRedeemed"
+    },
+    {
+      "code": 6008,
+      "msg": "No airdrop configured",
+      "name": "NoAirdropConfigured"
+    },
+    {
+      "code": 6009,
+      "msg": "Max claims cannot be set below current claims",
+      "name": "MaxClaimsTooLow"
+    },
+    {
+      "code": 6010,
+      "msg": "Stake is still locked",
+      "name": "StakeLocked"
+    },
+    {
+      "code": 6011,
+      "msg": "Target amount not met",
+      "name": "TargetNotMet"
+    },
+    {
+      "code": 6012,
+      "msg": "Verifier key is missing",
+      "name": "VerifierKeyMissing"
+    }
+  ],
+  "events": [
+    {
+      "discriminator": [
+        22,
+        192,
+        125,
+        123,
+        243,
+        139,
+        58,
+        7
+      ],
+      "name": "CampaignInitialized"
+    },
+    {
+      "discriminator": [
+        46,
+        137,
+        105,
+        193,
+        40,
+        75,
+        104,
+        209
+      ],
+      "name": "ClaimMade"
+    },
+    {
+      "discriminator": [
+        26,
+        52,
+        0,
+        89,
+        207,
+        94,
+        84,
+        241
+      ],
+      "name": "DistributionRedeemed"
+    },
+    {
+      "discriminator": [
+        198,
+        91,
+        221,
+        181,
+        96,
+        2,
+        229,
+        110
+      ],
+      "name": "RewardsUpdated"
+    }
+  ],
+  "instructions": [
+    {
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true,
+          "writable": true
+        },
+        {
+          "name": "campaign",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  97,
+                  109,
+                  112,
+                  97,
+                  105,
+                  103,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "metadata"
+              }
+            ]
+          },
+          "writable": true
+        },
+        {
+          "name": "rewy_stake_account",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  119,
+                  121,
+                  95,
+                  115,
+                  116,
+                  97,
+                  107,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "campaign"
+              }
+            ]
+          },
+          "writable": true
+        },
+        {
+          "name": "airdrop_stake_account",
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  105,
+                  114,
+                  100,
+                  114,
+                  111,
+                  112,
+                  95,
+                  115,
+                  116,
+                  97,
+                  107,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "campaign"
+              }
+            ]
+          },
+          "writable": true
+        },
+        {
+          "name": "rewy_mint"
+        },
+        {
+          "name": "airdrop_mint",
+          "optional": true
+        },
+        {
+          "address": "11111111111111111111111111111111",
+          "name": "system_program"
+        },
+        {
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+          "name": "token_program"
+        },
+        {
+          "address": "SysvarRent111111111111111111111111111111111",
+          "name": "rent"
+        }
+      ],
+      "args": [
+        {
+          "name": "campaign_type",
+          "type": {
+            "defined": {
+              "name": "CampaignType"
+            }
+          }
+        },
+        {
+          "name": "rewy_stake",
+          "type": "u64"
+        },
+        {
+          "name": "rewy_reward_per_action",
+          "type": "u64"
+        },
+        {
+          "name": "expiry",
+          "type": {
+            "option": "i64"
+          }
+        },
+        {
+          "name": "max_claims",
+          "type": "u64"
+        },
+        {
+          "name": "metadata",
+          "type": "string"
+        },
+        {
+          "name": "content_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "business_verifier_key",
+          "type": {
+            "option": "pubkey"
+          }
+        },
+        {
+          "name": "airdrop_params",
+          "type": {
+            "option": {
+              "defined": {
+                "name": "AirdropParams"
+              }
+            }
+          }
+        }
+      ],
+      "discriminator": [
+        169,
+        88,
+        7,
+        6,
+        9,
+        165,
+        65,
+        132
+      ],
+      "name": "initialize_campaign"
+    },
+    {
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  119,
+                  121,
+                  95,
+                  97,
+                  105,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          },
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "signer": true,
+          "writable": true
+        },
+        {
+          "address": "11111111111111111111111111111111",
+          "name": "system_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "verifier_key",
+          "type": "pubkey"
+        }
+      ],
+      "discriminator": [
+        208,
+        127,
+        21,
+        1,
+        194,
+        190,
+        196,
+        70
+      ],
+      "name": "initialize_config"
+    },
+    {
+      "accounts": [
+        {
+          "name": "campaign",
+          "writable": true
+        },
+        {
+          "name": "rewy_stake_account",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  119,
+                  121,
+                  95,
+                  115,
+                  116,
+                  97,
+                  107,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "campaign"
+              }
+            ]
+          },
+          "relations": [
+            "campaign"
+          ],
+          "writable": true
+        },
+        {
+          "name": "airdrop_stake_account",
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  105,
+                  114,
+                  100,
+                  114,
+                  111,
+                  112,
+                  95,
+                  115,
+                  116,
+                  97,
+                  107,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "campaign"
+              }
+            ]
+          },
+          "writable": true
+        },
+        {
+          "name": "distribution",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  105,
+                  115,
+                  116,
+                  114,
+                  105,
+                  98,
+                  117,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "campaign"
+              },
+              {
+                "account": "Distribution",
+                "kind": "account",
+                "path": "distribution.code"
+              }
+            ]
+          },
+          "writable": true
+        },
+        {
+          "name": "user",
+          "signer": true,
+          "writable": true
+        },
+        {
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+          "name": "token_program"
+        }
+      ],
+      "args": [],
+      "discriminator": [
+        172,
+        44,
+        229,
+        2,
+        46,
+        251,
+        63,
+        215
+      ],
+      "name": "redeem_distribution"
+    },
+    {
+      "accounts": [
+        {
+          "name": "campaign",
+          "writable": true
+        },
+        {
+          "name": "rewy_stake_account",
+          "relations": [
+            "campaign"
+          ],
+          "writable": true
+        },
+        {
+          "name": "airdrop_stake_account",
+          "optional": true,
+          "writable": true
+        },
+        {
+          "name": "user_wallet",
+          "writable": true
+        },
+        {
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+          "name": "token_program"
+        },
+        {
+          "address": "SysvarC1ock11111111111111111111111111111111",
+          "name": "clock"
+        },
+        {
+          "address": "Sysvar1nstructions1111111111111111111111111",
+          "name": "instructions"
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  119,
+                  121,
+                  95,
+                  97,
+                  105,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "voucher",
+          "type": "bytes"
+        },
+        {
+          "name": "rewy_amount",
+          "type": "u64"
+        },
+        {
+          "name": "airdrop_amount",
+          "type": {
+            "option": "u64"
+          }
+        }
+      ],
+      "discriminator": [
+        50,
+        219,
+        8,
+        127,
+        45,
+        96,
+        161,
+        92
+      ],
+      "name": "redeem_voucher"
+    },
+    {
+      "accounts": [
+        {
+          "name": "campaign",
+          "writable": true
+        },
+        {
+          "name": "rewy_stake_account",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  119,
+                  121,
+                  95,
+                  115,
+                  116,
+                  97,
+                  107,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "campaign"
+              }
+            ]
+          },
+          "writable": true
+        },
+        {
+          "name": "airdrop_stake_account",
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  105,
+                  114,
+                  100,
+                  114,
+                  111,
+                  112,
+                  95,
+                  115,
+                  116,
+                  97,
+                  107,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "campaign"
+              }
+            ]
+          },
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "relations": [
+            "campaign"
+          ],
+          "signer": true,
+          "writable": true
+        },
+        {
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+          "name": "token_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "rewy_amount",
+          "type": "u64"
+        },
+        {
+          "name": "airdrop_amount",
+          "type": {
+            "option": "u64"
+          }
+        }
+      ],
+      "discriminator": [
+        207,
+        41,
+        167,
+        243,
+        94,
+        218,
+        67,
+        226
+      ],
+      "name": "stake_rewards"
+    },
+    {
+      "accounts": [
+        {
+          "name": "campaign",
+          "writable": true
+        },
+        {
+          "name": "rewy_stake_account",
+          "relations": [
+            "campaign"
+          ],
+          "writable": true
+        },
+        {
+          "name": "airdrop_stake_account",
+          "optional": true,
+          "writable": true
+        },
+        {
+          "name": "user_wallet",
+          "writable": true
+        },
+        {
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+          "name": "token_program"
+        },
+        {
+          "address": "SysvarC1ock11111111111111111111111111111111",
+          "name": "clock"
+        },
+        {
+          "address": "Sysvar1nstructions1111111111111111111111111",
+          "name": "instructions"
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  119,
+                  121,
+                  95,
+                  97,
+                  105,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "proof_code",
+          "type": "bytes"
+        }
+      ],
+      "discriminator": [
+        54,
+        241,
+        46,
+        84,
+        4,
+        212,
+        46,
+        94
+      ],
+      "name": "submit_proof"
+    },
+    {
+      "accounts": [
+        {
+          "name": "campaign",
+          "writable": true
+        },
+        {
+          "name": "rewy_stake_account",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  119,
+                  121,
+                  95,
+                  115,
+                  116,
+                  97,
+                  107,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "campaign"
+              }
+            ]
+          },
+          "writable": true
+        },
+        {
+          "name": "airdrop_stake_account",
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  105,
+                  114,
+                  100,
+                  114,
+                  111,
+                  112,
+                  95,
+                  115,
+                  116,
+                  97,
+                  107,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "campaign"
+              }
+            ]
+          },
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "relations": [
+            "campaign"
+          ],
+          "signer": true,
+          "writable": true
+        },
+        {
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+          "name": "token_program"
+        },
+        {
+          "address": "SysvarC1ock11111111111111111111111111111111",
+          "name": "clock"
+        }
+      ],
+      "args": [
+        {
+          "name": "rewy_amount",
+          "type": "u64"
+        },
+        {
+          "name": "airdrop_amount",
+          "type": {
+            "option": "u64"
+          }
+        }
+      ],
+      "discriminator": [
+        99,
+        244,
+        51,
+        244,
+        251,
+        67,
+        33,
+        3
+      ],
+      "name": "unstake_rewards"
+    },
+    {
+      "accounts": [
+        {
+          "name": "campaign",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "relations": [
+            "campaign"
+          ],
+          "signer": true,
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "new_rewy_reward",
+          "type": "u64"
+        },
+        {
+          "name": "new_airdrop_reward",
+          "type": {
+            "option": "u64"
+          }
+        },
+        {
+          "name": "new_max_claims",
+          "type": {
+            "option": "u64"
+          }
+        }
+      ],
+      "discriminator": [
+        188,
+        38,
+        124,
+        42,
+        87,
+        77,
+        176,
+        90
+      ],
+      "name": "update_rewards"
+    },
+    {
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  119,
+                  121,
+                  95,
+                  97,
+                  105,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          },
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "relations": [
+            "config"
+          ],
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "new_key",
+          "type": "pubkey"
+        }
+      ],
+      "discriminator": [
+        134,
+        210,
+        82,
+        163,
+        252,
+        44,
+        56,
+        143
+      ],
+      "name": "update_verifier_key"
+    }
+  ],
+  "metadata": {
+    "description": "Created with Anchor",
+    "name": "rewy_protocol",
+    "spec": "0.1.0",
+    "version": "0.1.0"
+  },
+  "types": [
+    {
+      "name": "AirdropParams",
+      "type": {
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "stake",
+            "type": "u64"
+          },
+          {
+            "name": "reward",
+            "type": "u64"
+          }
+        ],
+        "kind": "struct"
+      }
+    },
+    {
+      "name": "Campaign",
+      "type": {
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "pda",
+            "type": "pubkey"
+          },
+          {
+            "name": "campaign_type",
+            "type": {
+              "defined": {
+                "name": "CampaignType"
+              }
+            }
+          },
+          {
+            "name": "rewy_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "rewy_stake_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "rewy_staked_amount",
+            "type": "u64"
+          },
+          {
+            "name": "airdrop_mint",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "airdrop_stake_account",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "airdrop_staked_amount",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "expiry",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "is_active",
+            "type": "bool"
+          },
+          {
+            "name": "metadata",
+            "type": "string"
+          },
+          {
+            "name": "content_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "contributions",
+            "type": "u64"
+          },
+          {
+            "name": "target_amount",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "vesting_period",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "launch_token_mint",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "stake_locked_until",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "nonce",
+            "type": "u64"
+          },
+          {
+            "name": "rewy_reward_per_action",
+            "type": "u64"
+          },
+          {
+            "name": "airdrop_reward_per_action",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "max_claims",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "business_verifier_key",
+            "type": {
+              "option": "pubkey"
+            }
+          }
+        ],
+        "kind": "struct"
+      }
+    },
+    {
+      "name": "CampaignInitialized",
+      "type": {
+        "fields": [
+          {
+            "name": "campaign",
+            "type": "pubkey"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "campaign_type",
+            "type": {
+              "defined": {
+                "name": "CampaignType"
+              }
+            }
+          }
+        ],
+        "kind": "struct"
+      }
+    },
+    {
+      "name": "CampaignType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "StakeForAction"
+          },
+          {
+            "name": "StakeForCrowdsource"
+          },
+          {
+            "name": "StakeForDistribution"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ClaimMade",
+      "type": {
+        "fields": [
+          {
+            "name": "campaign",
+            "type": "pubkey"
+          },
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "rewy_amount",
+            "type": "u64"
+          },
+          {
+            "name": "airdrop_amount",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "claims_remaining",
+            "type": {
+              "option": "u64"
+            }
+          }
+        ],
+        "kind": "struct"
+      }
+    },
+    {
+      "name": "Distribution",
+      "type": {
+        "fields": [
+          {
+            "name": "campaign_pda",
+            "type": "pubkey"
+          },
+          {
+            "name": "code",
+            "type": "string"
+          },
+          {
+            "name": "rewy_amount",
+            "type": "u64"
+          },
+          {
+            "name": "airdrop_amount",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "is_redeemed",
+            "type": "bool"
+          },
+          {
+            "name": "recipient",
+            "type": {
+              "option": "pubkey"
+            }
+          }
+        ],
+        "kind": "struct"
+      }
+    },
+    {
+      "name": "DistributionRedeemed",
+      "type": {
+        "fields": [
+          {
+            "name": "campaign",
+            "type": "pubkey"
+          },
+          {
+            "name": "code",
+            "type": "string"
+          },
+          {
+            "name": "recipient",
+            "type": "pubkey"
+          }
+        ],
+        "kind": "struct"
+      }
+    },
+    {
+      "name": "RewardsUpdated",
+      "type": {
+        "fields": [
+          {
+            "name": "campaign",
+            "type": "pubkey"
+          },
+          {
+            "name": "rewy_reward",
+            "type": "u64"
+          },
+          {
+            "name": "airdrop_reward",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "max_claims",
+            "type": {
+              "option": "u64"
+            }
+          }
+        ],
+        "kind": "struct"
+      }
+    },
+    {
+      "name": "RewyAIConfig",
+      "type": {
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "verifier_key",
+            "type": "pubkey"
+          }
+        ],
+        "kind": "struct"
+      }
+    }
+  ]
+}
